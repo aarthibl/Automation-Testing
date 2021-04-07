@@ -3,26 +3,63 @@ Library    OperatingSystem
 Library    MongoDBLibrary
 Library    String
 Library    Collections
+Library    DateTime
 
 
 *** Variables ***
+${count1} =  1
 
 *** Keywords ***
 access data from backend
     [Tags]    count
-    ${On-Hold}       retrieve some mongodb records    workflow    v_agg_project    {"_id":"On-Hold"}
-    @{on-Hold-1}  split string  ${On-Hold}
-    ${on-Hold-count}  get from list  ${on-Hold-1}  3
-    #log many    @{On-Hold-1}
-    ${In-Progress}       retrieve some mongodb records    workflow    v_agg_project    {"_id":"In-Progress"}
-    @{In-Progress-1}  split string  ${In-Progress}
-    ${In-Progress-count}  get from list  ${In-Progress-1}  3
-    ${Open}       retrieve some mongodb records    workflow    v_agg_project    {"_id":"Open"}
-    @{Open-1}  split string  ${Open}
-    ${Open-count}  get from list  ${Open-1}  3
+    ${On-Hold}        retrieve some mongodb records    workflow    v_agg_project    {"_id":"On-Hold"}
+    ${In-Progress}    retrieve some mongodb records    workflow    v_agg_project    {"_id":"In-Progress"}
+    ${Open}           retrieve some mongodb records    workflow    v_agg_project    {"_id":"Open"}
     ${Delayed}       retrieve some mongodb records    workflow    v_agg_project    {"_id":"Delayed"}
-    @{Delayed-1}  split string  ${delayed}
-    ${Delayed-count}  get from list  ${Delayed-1}  3
-    @{backenddata} =  create list    ${On-Hold-count}  ${In-Progress-count}  ${Open-count}  ${Delayed-count}
+    @{bck}    create list    ${On-Hold}      ${In-Progress}      ${Open}        ${Delayed}
+    @{backenddata}      create list
+    @{li}  create list
+
+    FOR    ${ITEM}    IN    @{bck}
+        ${length}   get length    ${item}
+        @{split_string}    split string  ${ITEM}
+        run keyword if     ${length} == 0
+        ...     @{li}  set variable    0   0     0   0
+        ...     ${count1}  get from list    @{li}  3
+        ...     append to list    ${backenddata}  ${count1}
+        ...     END
+        log  ${count1}
+        log many  @{li}
+        log many    @{split_string}
+        ${count}    get from list  ${SPLIT_STRING}  3
+        append to list    ${backenddata}    ${count}
+        log  ${backenddata}
+    END
     [Return]    @{backenddata}
 
+access data from bargraph
+    [Tags]  graph
+    #${Open_graph}  retrieve some mongodb records    workflow  v_workflow_status   {"_id":"2021-04-06"}
+    #log    ${Open_graph}
+     ${DATE}        GET CURRENT DATE
+
+     @{DATES}       CREATE LIST                                 #gets both date and time for next 5 days
+     FOR    ${ITEM}     IN RANGE    1  6
+            ${DAY}      ADD TIME TO DATE    ${DATE}     ${ITEM}DAYS
+            append to list    ${DATES}    ${Day}
+     END
+
+     @{DATES_FINAL}     create list                            #collecting only dates from the data
+     FOR    ${ITEM}    IN    @{DATES}
+            @{date}     split string    ${ITEM}
+            ${Date_only}    get from list    ${date}    0
+            append to list    ${DATES_FINAL}    ${Date_only}
+     END
+     log many    @{DATES_FINAL}
+
+     FOR    ${ITEM}     IN     @{DATES_FINAL}
+            ${OPEN_GRAPH} =    RETRIEVE SOME MONGODB RECORDS    workflow     v_workflow_status     {"_id":"${ITEM}"}
+            LOG    ${OPEN_GRAPH}
+            #RUN KEYWORD IF    ${OPEN_GRAPH}
+            #...    ELSE     continue for loop
+     END
