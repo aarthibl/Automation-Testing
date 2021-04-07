@@ -7,7 +7,6 @@ Library    DateTime
 
 
 *** Variables ***
-${count1} =  1
 
 *** Keywords ***
 access data from backend
@@ -18,19 +17,15 @@ access data from backend
     ${Delayed}       retrieve some mongodb records    workflow    v_agg_project    {"_id":"Delayed"}
     @{bck}    create list    ${On-Hold}      ${In-Progress}      ${Open}        ${Delayed}
     @{backenddata}      create list
-    @{li}  create list
 
     FOR    ${ITEM}    IN    @{bck}
         ${length}   get length    ${item}
         @{split_string}    split string  ${ITEM}
+        log  ${split_string}
         run keyword if     ${length} == 0
-        ...     @{li}  set variable    0   0     0   0
-        ...     ${count1}  get from list    @{li}  3
-        ...     append to list    ${backenddata}  ${count1}
-        ...     END
-        log  ${count1}
-        log many  @{li}
+        ...     append to list    ${split_string}  0  0  0  0
         log many    @{split_string}
+        log  ${backenddata}
         ${count}    get from list  ${SPLIT_STRING}  3
         append to list    ${backenddata}    ${count}
         log  ${backenddata}
