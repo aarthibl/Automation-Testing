@@ -23,7 +23,7 @@ access data from backend
         @{split_string}    split string  ${ITEM}
         log  ${split_string}
         run keyword if     ${length} == 0
-        ...     append to list    ${split_string}  0  0  0  0
+        ...     append to list    ${split_string}       0  0  0  0
         log many    @{split_string}
         log  ${backenddata}
         ${count}    get from list  ${SPLIT_STRING}  3
